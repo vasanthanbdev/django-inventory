@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %} Purchases List {% endblock title %}
+
+{% block content %}
+    <div class="row" style="color: #575757; font-style: bold; font-size: 3rem;">
+        <div class="col-md-8">Purchases List</div>
+        <div class="col-md-4">           
+            <div style="float:right;"> 
+                <a class="btn btn-success" href="{% url 'select-supplier' %}">New Incoming Stock</a> 
+                <button class="btn btn-primary" onclick="exportPurchasesToExcel()">Export to Excel</button>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <label for="datepicker">Select Date:</label>
+    <input type="date" id="datepicker">
+
+    <table class="table table-css table-hover table-bordered">
+        <thead class="thead-dark align-middle">
+            <tr>
+                <th width="10%">Bill No.</th>
+                <th width="15%">Supplier</th>
+                <th width="15%">Stocks Purchased</th>
+                <th width="10%">Quantity Purchased</th>
+                <th width="15%">Total Purchased Price</th>
+                <th width="10%">Purchased Date</th>
+                <th width="25%">Actions</th>
+            </tr>
+        </thead>
+
+        {% if bills %}
+            <tbody id="purchaseTableBody">
+                {% for purchase in bills %}
+                <tr style="background: radial-gradient(circle at center, {% if purchase.auto_generated %}#FAFAD2, white{% else %}white, white{% endif %});">
+
+                    <td class="align-middle">{{ purchase.billno }}</td>
+                    <td>
+                        {% if purchase.supplier.is_deleted %}
+                            {{ purchase.supplier }}<br>
+                        {% else %}
+                            <a href="{% url 'supplier' purchase.supplier.name %}">{{ purchase.supplier }}</a> <br>
+                        {% endif %}
+                        <small style="color: #909494">Ph No: {{ purchase.supplier.phone }}</small>
+                    </td>
+                    <td class="align-middle">
+                        {% for item in purchase.get_items_list %}
+                            {{ item.stock.name }}
+                            {% if item.stock.sub_category %}
+                                ({{ item.stock.sub_category }})
+                            {% endif %}
+                            <br>
+                        {% endfor %}
+                    </td>
+                    <td class="align-middle">{% for item in purchase.get_items_list %} {{ item.quantity }}<br>{% endfor %}</td>
+                    <td class="align-middle">${{ purchase.get_total_price }}</td>
+                    <td class="align-middle">{{ purchase.time|date:"F d, Y" }}</td>
+                    <td class="align-middle">
+                        <a href="{% url 'purchase-bill' purchase.billno %}" class="btn btn-secondary btn-sm">View Bill</a>
+                        <a href="{% url 'delete-purchase' purchase.pk %}" class="btn btn-danger btn-sm">Delete Bill</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        {% else %}
+            <tbody></tbody>
+        </table>
+
+        <br><br><br><br><br><br><br><br>
+        <div style="color: #575757; font-style: bold; font-size: 1.5rem; text-align: center;">The records are empty. Please try adding some.</div>
+    {% endif %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.full.min.js"></script>
+<script>
+    function exportPurchasesToExcel() {
+        console.log('Exporting Purchases to Excel...');
+        var table = document.querySelector('.table-css');
+
+        if (table) {
+            var ws = XLSX.utils.aoa_to_sheet([["Bill No.", "Supplier", "Stocks Purchased", "Quantity Purchased", "Total Purchased Price", "Purchased Date"]]);
+            table.querySelectorAll('tbody tr').forEach(function(row) {
+                if (row.style.display !== 'none') {
+                    var rowData = [
+                        row.querySelector('td:nth-child(1)').innerText,
+                        row.querySelector('td:nth-child(2)').innerText,
+                        row.querySelector('td:nth-child(3)').innerText,
+                        row.querySelector('td:nth-child(4)').innerText,
+                        row.querySelector('td:nth-child(5)').innerText,
+                        row.querySelector('td:nth-child(6)').innerText
+                    ];
+                    XLSX.utils.sheet_add_aoa(ws, [rowData], { origin: -1 });
+                }
+            });
+
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Purchases');
+            XLSX.writeFile(wb, 'purchases_list.xlsx');
+        } else {
+            console.error("Table with class 'table-css' not found.");
+        }
+    }
+
+    function formatDate(dateString) {
+        var date = new Date(dateString);
+        var options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+    }
+    
+    document.getElementById('datepicker').addEventListener('change', function() {
+        var selectedDate = this.value;
+        var formattedSelectedDate = formatDate(selectedDate);
+        var purchaseTableBody = document.getElementById('purchaseTableBody');
+        document.querySelectorAll('#purchaseTableBody tr').forEach(function(row) {
+            var dateColumn = row.querySelector('td:nth-child(6)').innerText.trim();
+            if (selectedDate === '') {
+                row.style.display = 'table-row';
+            } else {
+                if (dateColumn === formattedSelectedDate) {
+                    row.style.display = 'table-row';
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        });
+    });
+</script>
+
+{% endblock content %}

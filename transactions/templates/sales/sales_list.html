@@ -1,0 +1,154 @@
+<!-- sales_list.html -->
+{% extends "base.html" %}
+{% load widget_tweaks %}
+
+{% block title %} Sales List {% endblock title %}
+
+{% block content %}
+    <div class="row" style="color: #575757; font-style: bold; font-size: 3rem;">
+        <div class="col-md-8">Sales List</div>
+        <div class="col-md-4">
+            <div style="float:right;">
+                <a class="btn btn-success" href="{% url 'new-sale' %}">New Outgoing Stock</a>
+                <button class="btn btn-primary" onclick="exportPurchasesToExcel()">Export to Excel</button>
+            </div>
+        </div>
+    </div>
+
+    <br>
+
+    <label for="datepicker">Select Date:</label>
+    <input type="date" id="datepicker">
+
+    <table class="table table-css table-bordered table-hover">
+        <thead class="thead-dark align-middle">
+            <tr>
+                <th width="10%">Bill No.</th>
+                <th width="15%">Customer</th>
+                <th width="15%">Stocks Sold</th>
+                <th width="10%">Quantity Sold</th>
+                <th width="10%">Total Sold Price</th>
+                <th width="15%">Date</th>
+                <th width="25%">Actions</th>
+            </tr>
+        </thead>
+        {% if bills %}
+            <tbody id="salesTableBody">
+                {% for sale in bills %}
+                    <tr>
+                        <td class="align-middle"><p>{{ sale.billno }}</p></td>
+                        <td class="">{{ sale.name }} <br> <small style="color: #909494">Ph No : {{ sale.phone }}</small></td>
+                        <td class="align-middle">
+                            {% for item in sale.get_items_list %}
+                                <a href="{% url 'product-details' item.stock.name %}">
+                                    {{ item.stock.name }}
+                                    {% if item.stock.sub_category %}
+                                        ({{ item.stock.sub_category }})
+                                    {% endif %}
+                                </a><br>
+                            {% endfor %}
+                        </td>
+                        <td class="align-middle">{% for item in sale.get_items_list %} {{ item.quantity }} <br> {% endfor %}</td>
+                        <td class="align-middle">${{ sale.get_total_price }}</td>
+                        <td class="align-middle">{{ sale.time|date:"F" }} {{ sale.time|date:"d," }} {{ sale.time|date:"Y" }}</td>
+
+                        <td class="align-middle">
+                            <a href="{% url 'sale-bill' sale.billno %}" class="btn btn-secondary btn-sm">View Bill</a>
+                            <a href="{% url 'delete-sale' sale.pk %}" class="btn btn-danger btn-sm">Delete Bill</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            
+    </table>
+
+    <div class="align-middle">
+        {% if is_paginated %}
+            {% if page_obj.has_previous %}
+                <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+                <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% else %}
+        <tbody></tbody>
+    </table>
+    <br><br><br><br><br><br><br><br>
+    <div style="color: #575757; font-style: bold; font-size: 1.5rem; text-align: center;">The records are empty. Please try adding some.</div>
+    {% endif %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
+    <script>
+        function exportTableToExcel() {
+            console.log('Exporting to Excel...');
+            var table = document.querySelector('.table-css');
+            var ws = XLSX.utils.aoa_to_sheet([["Bill No.", "Customer", "Stocks Sold", "Quantity Sold", "Total Sold Price", "Date"]]);
+            document.querySelectorAll('.table-css tbody tr').forEach(function(row) {
+                if (row.style.display !== 'none') {
+                    var rowData = [
+                        row.querySelector('td:nth-child(1)').innerText,
+                        row.querySelector('td:nth-child(2)').innerText,
+                        row.querySelector('td:nth-child(3)').innerText,
+                        row.querySelector('td:nth-child(4)').innerText,
+                        row.querySelector('td:nth-child(5)').innerText,
+                        row.querySelector('td:nth-child(6)').innerText
+                    ];
+                    XLSX.utils.sheet_add_aoa(ws, [rowData], { origin: -1 });
+                }
+            });
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+            XLSX.writeFile(wb, 'sales_list.xlsx');
+        }
+
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            var options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+    
+        // Function to filter sales based on selected date
+        document.getElementById('datepicker').addEventListener('change', function() {
+            var selectedDate = this.value;
+            var formattedSelectedDate = formatDate(selectedDate);
+            var salesTableBody = document.getElementById('salesTableBody');
+            document.querySelectorAll('#salesTableBody tr').forEach(function(row) {
+                var dateColumn = row.querySelector('td:nth-child(6)').innerText.trim();
+                if (selectedDate === '') {
+                    row.style.display = 'table-row';
+                } else {
+                    if (dateColumn === formattedSelectedDate) {
+                        row.style.display = 'table-row';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        });
+        
+        function formatDate(dateString) {
+            var date = new Date(dateString);
+            var options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+        
+        function clearDateSelection() {
+            document.getElementById('datepicker').value = ''; // Clear date selection
+            var salesTableBody = document.getElementById('salesTableBody');
+            document.querySelectorAll('#salesTableBody tr').forEach(function(row) {
+                row.style.display = 'table-row'; // Show all rows
+            });
+        }
+        
+    </script>
+{% endblock content %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %} Reorder Products {% endblock title %}
+
+{% block content %}
+    <div style="color: #4e4e4e; font-style: bold; font-size: 3rem;">Products Reordered</div>
+
+    <table class="table table-css table-bordered table-hover">
+        <thead class="thead-dark align-middle">
+            <tr>
+                <th width="40%">Stock Name</th>
+                <th>Current Stock in Inventory</th>
+                <th>Cost</th>
+                {% comment %} <th>Action</th>  <!-- New column for the Reorder button --> {% endcomment %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in reorder_products %}
+                <tr>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.quantity }}</td>
+                    <td>{{ product.cost }}</td>
+                    {% comment %} <td class="text-center">
+                        <!-- Placeholder button without functionality -->
+                        <button type="button" class="btn btn-primary">Reorder Now</button>
+                    </td> {% endcomment %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock content %}

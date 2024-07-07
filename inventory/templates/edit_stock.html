@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %} {{title}} {% endblock title %}
+
+{% block content %}
+
+    <div style="color:#575757; font-style: bold; font-size: 3rem; border-bottom: 1px solid white;">{{title}}</div> 
+
+    <br>
+
+    <form method="post">
+
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="form-group">
+            {{ form.name.errors }}
+            <label for="{{ form.name.id_for_label }}">Name:</label>
+            {{ form.name }}
+        </div>
+        <div class="form-group">
+            {{ form.sub_category.errors }}
+            <label for="{{ form.sub_category.id_for_label }}">Sub-Category(Kg/mL/Model):</label>
+            {{ form.sub_category }}
+        </div>
+
+        <div class="form-group">
+            {{ form.quantity.errors }}
+            <label for="{{ form.quantity.id_for_label }}">Quantity:</label>
+            {{ form.quantity }}
+        </div>
+
+        <div class="form-group">
+            {{ form.cost.errors }}
+            <label for="{{ form.cost.id_for_label }}">Cost:</label>
+            {{ form.cost }}
+        </div>
+        
+
+        <div class="align-middle">
+            <button type="submit" class="btn btn-success">{{ savebtn }}</button>
+            <a href="{% url 'inventory' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+
+    </form>
+    {% if form.errors %}
+    <div class="alert alert-danger">
+        <strong>Error!</strong> Please correct the following errors:
+        <ul>
+            {% for error in form.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+
+{% endblock content %}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% load widget_tweaks %}
+
+{% block title %} Inventory List {% endblock title %}
+
+{% block content %}
+    <div class="row" style="color: #4e4e4e; font-style: bold; font-size: 3rem;">
+        <div class="col-md-8">Inventory List</div>
+        <div class="col-md-4">
+            <div style="float:right;">
+                <a class="btn btn-success" href="{% url 'new-stock' %}">Add New Stock</a>
+            </div>
+        </div>
+    </div>
+
+    <div style="border-bottom: 1px solid white;"></div>
+
+    <br>
+
+    <table class="table table-css table-bordered table-hover">
+        <form method="get">
+            <div class="input-group search">
+                {% render_field filter.form.name class="form-control textinput" placeholder="Search by stock name" %}
+                <div class="input-group-append">
+                    <button type="submit" class="btn btn-pink"> Search </button>
+                </div>
+            </div>
+        </form>
+
+        <br>
+
+        <thead class="thead-dark align-middle">
+            <tr>
+                <th width="40%">Stock Name</th>
+                <th>Current Stock in Inventory</th>
+                <th class="cost-column-header" style="display: {% if display_cost %}table-cell{% else %}none{% endif %};">Cost</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        {% if object_list %}
+            <tbody>
+                {% for stock in object_list %}
+                    <tr>
+                        <td>
+                            <p><a href="{% url 'editable-table' pk=stock.pk %}">{{ stock.name }}{% if stock.sub_category %} ({{ stock.sub_category }}){% endif %}</a></p>
+                        </td>
+                        <td class="align-middle">{{ stock.quantity }}</td>
+                        <td class="align-middle cost-column" style="display: {% if display_cost %}table-cell{% else %}none{% endif %};">{{ stock.cost }}</td>
+                        <td class="align-middle">
+                            <a href="{% url 'edit-stock' stock.pk %}" class="btn btn-info btn-sm">Edit Details</a>
+                            <a href="{% url 'delete-stock' stock.pk %}" class="btn btn-danger btn-sm">Delete Stock</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <button type="button" onclick="exportTableToExcel()">Export to Excel</button>
+        </table>
+
+
+        <div class="align-middle" style="margin-top: 20px; float: right;">
+            <label class="form-check-label" style="font-size: 1rem;">
+                <input type="checkbox" id="displayCostCheckbox" class="form-check-input" {% if display_cost %}checked{% endif %} onchange="toggleCostColumn()"> Display Cost
+            </label>
+        </div>
+
+        <div class="align-middle">
+            {% if is_paginated %}
+                {% if page_obj.has_previous %}
+                    <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+                    <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                {% endif %}
+            {% endif %}
+        </div>
+
+    {% else %}
+        </tbody>
+    </table>
+
+    <br><br><br><br><br><br><br><br>
+    <div style="color: #575757; font-style: bold; font-size: 1.5rem; text-align: center;">The records are empty. Please try adding some.</div>
+    {% endif %}
+
+<a href="{% url 'reorder-products' %}" class="btn btn-warning btn-sm">Reorder Products</a>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.2/xlsx.full.min.js"></script>
+
+    <script>
+
+        function exportTableToExcel() {
+            console.log('Exporting to Excel...');
+            // Get table data
+            var table = document.querySelector('.table-css');
+
+            // Create a new worksheet
+            var ws = XLSX.utils.aoa_to_sheet([["Stock Name", "Current Stock in Inventory"]]);
+
+            // Iterate over rows in the table and extract relevant data
+            document.querySelectorAll('.table-css tbody tr').forEach(function(row) {
+                var rowData = [
+                    row.querySelector('td:nth-child(1)').innerText, // Stock Name
+                    row.querySelector('td:nth-child(2)').innerText // Current Stock in Inventory
+                ];
+                XLSX.utils.sheet_add_aoa(ws, [rowData], { origin: -1 });
+            });
+
+            // Create a workbook with the worksheet data
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+    
+            // Save the workbook as an Excel file
+            XLSX.writeFile(wb, 'inventory_list.xlsx');
+        }
+        
+        function toggleCostColumn() {
+            var costColumnHeader = document.querySelector(".cost-column-header");
+            var costColumns = document.querySelectorAll(".cost-column");
+
+            var displayCostCheckbox = document.getElementById("displayCostCheckbox");
+
+            costColumnHeader.style.display = displayCostCheckbox.checked ? "table-cell" : "none";
+
+            costColumns.forEach(function(column) {
+                column.style.display = displayCostCheckbox.checked ? "table-cell" : "none";
+            });
+            
+        
+}
+    </script>
+
+{% endblock content %}

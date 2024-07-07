@@ -1,0 +1,88 @@
+<!-- editable_table.html -->
+{% extends "base.html" %}
+
+{% block title %} Editable Table {% endblock title %}
+
+{% block content %}
+    <h2>{{ product.name }} - {{ product.sub_category }}</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                {% for related_product in related_products %}
+                    <th>
+                        {{ related_product.sub_category }}
+                        {% if related_product.cost %}
+                            (₹{{ related_product.cost }})
+                        {% endif %}
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ product.name }}</td>
+                {% for related_product in related_products %}
+                    <td>{{ related_product.quantity }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Add Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Create a canvas element for the pie chart -->
+    <div style="max-width: 600px; margin: auto;">
+        <canvas id="pieChart" width="400" height="400"></canvas>
+    </div>
+
+    <!-- JavaScript code to create the pie chart -->
+    <script>
+        var ctx = document.getElementById('pieChart').getContext('2d');
+        var myPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: [
+                    {% for related_product in related_products %}
+                        '{{ related_product.sub_category }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Quantity',
+                    data: [
+                        {% for related_product in related_products %}
+                            {{ related_product.quantity }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)',
+                        'rgba(255, 159, 64, 0.5)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var dataset = data.datasets[tooltipItem.datasetIndex];
+                            var total = dataset.data.reduce(function(previousValue, currentValue, currentIndex, array) {
+                                return previousValue + currentValue;
+                            });
+                            var currentValue = dataset.data[tooltipItem.index];
+                            var percentage = Math.floor(((currentValue / total) * 100) + 0.5); // Round to nearest integer
+                            return data.labels[tooltipItem.index] + ': ' + currentValue + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock content %}

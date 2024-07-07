@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .validation {
+            font-size: 14px;
+            margin-top: 5px;
+            color: red;
+        }
+
+        .valid-icon {
+            display: none;
+            color: green;
+            margin-left: 5px;
+        }
+
+        .valid-input {
+            border-color: green;
+        }
+
+        .invalid-icon {
+            display: none;
+            color: red;
+            margin-left: 5px;
+        }
+
+        .invalid-input {
+            border-color: red;
+        }
+
+        .valid-input .valid-icon {
+            display: inline-block;
+        }
+
+        .invalid-input .invalid-icon {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Signup</h2>
+        <form method="post">
+            {% csrf_token %}
+            <label for="username">Username:</label>
+            <input type="text" name="username" id="username" required>
+            <div class="validation" id="username-validation">Username must be between 5 and 150 characters.</div>
+
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" required>
+            <div class="validation" id="email-validation">Please enter a valid email address.</div>
+
+            <label for="password1">Password:</label>
+            <input type="password" name="password1" id="password1" required>
+            <div class="validation" id="password1-validation">Password must be at least 8 characters long.</div>
+
+            <label for="password2">Confirm Password:</label>
+            <input type="password" name="password2" id="password2" required>
+            <div class="validation" id="password2-validation">Passwords must match.</div>
+
+            <button type="submit" id="signup-btn">Sign Up</button>
+        </form>
+    </div>
+</body>
+</html>

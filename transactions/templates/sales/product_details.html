@@ -1,0 +1,50 @@
+<!-- product_details.html -->
+
+{% extends "base.html" %}
+
+{% block title %} Product Details: {{ product_name }} {% endblock title %}
+
+{% block content %}
+    <div style="margin-top: 20px; color: black;">
+        <h1>Product Details: {{ product_name }}</h1>
+        <p>Product Name: {{ product_name }}</p>
+        
+        <!-- Change the color of the horizontal line to white -->
+        <hr style="background-color: white;">
+
+        <h2 style="color: black;">Sales Chart for the Previous Six Months</h2>
+        
+        <!-- Graph Container -->
+        <canvas id="salesChart" width="800" height="400"></canvas>
+    </div>
+
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- JavaScript to render the sales chart -->
+    <script>
+        var ctx = document.getElementById('salesChart').getContext('2d');
+        var salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ months|safe }},
+                datasets: [{
+                    label: 'Sales Quantity',
+                    data: {{ monthly_sales_data|safe }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+{% endblock content %}
